@@ -7,6 +7,8 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);                        // Inisialisasi LCD I
 #define room_capacity 5                                    // jumlah maksimal orang dalam ruangan
 #define flag_timeout 7000                                  // timeout reset flag1 dan 2 jika tidak ada orang masuk/keluar
 
+#define reset_btn 6                                        // LCD reset button
+
 #define e_s1 3                                             // Ultrasonic echo pin 1 terhubung ke pin 3 Arduino 
 #define t_s1 4                                             // Ultrasonic trigger pin 1 terhubung ke pin 4 Arduino 
 
@@ -222,17 +224,30 @@ void check_flag_timeout() {
   }
 }
 
+/**
+ * @brief
+ * if the reset button is pressed, we reset ONLY THE LCD
+*/
+void handle_reset_btn() {
+  if (!digitalRead(reset_btn)) {
+    lcd.begin(16, 2);
+    lcd.backlight();
+  }
+}
+
 void setup(){
   Serial.begin(9600);                                      // Inisialisasi komunikasi serial pada 9600 bps
   while (!Serial);                                         // pastikan serial bener2 siap
 
+  pinMode(reset_btn, INPUT_PULLUP);
   pinMode(relay, OUTPUT);                                  // Set pin relay sebagai output
   pinMode(e_s1, INPUT);
   pinMode(e_s2, INPUT);
   pinMode(t_s1, OUTPUT);
   pinMode(t_s2, OUTPUT);
 
-  lcd.init();                                              // Inisialisasi LCD
+  lcd.init();
+  lcd.begin(16,2);                                         // Inisialisasi LCD
   lcd.backlight();                                         // Nyalakan backlight LCD
   lcd.setCursor(0, 0);
   lcd.print("     Welcome    ");
@@ -241,6 +256,7 @@ void setup(){
 }
 
 void loop(){ 
+  handle_reset_btn(); 
 
   ultra_read(t_s1, e_s1, dis_a); delay(10);                // Membaca nilai sensor ultrasonic 1
   ultra_read(t_s2, e_s2, dis_b); delay(10);                // Membaca nilai sensor ultrasonic 2

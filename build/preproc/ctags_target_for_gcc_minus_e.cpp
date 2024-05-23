@@ -3,10 +3,11 @@
 # 3 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino" 2
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); // Inisialisasi LCD I2C dengan alamat 0x27 dan ukuran 16x2
-# 18 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+# 20 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
 unsigned long dis_a = 0, dis_b = 0; // Variabel untuk menyimpan nilai dari sensor ultrasonic
 unsigned long last_flag_set[2] = {0,0};
 bool flag[2] = {false, false}; // Variabel flag untuk sensor ultrasonic
+bool led_on = false; // apakah LED on?
 int people_count = 0; // Variabel untuk menyimpan jumlah orang
 
 
@@ -33,17 +34,31 @@ void ultra_read(int pin_t, int pin_e, unsigned long &ultra_dist){
   ultra_dist = time / 29 / 2;
 }
 
+// menampilkan jumlah orang dalam ruangan ("count: <jumlah_orang>")
 void display_count() {
   lcd.setCursor(0,1);
   lcd.print("                "); // clear baris 2
-  lcd.setCursor(0,1);
+  lcd.setCursor(4,1);
   lcd.print("count: ");
   lcd.print(people_count);
   lcd.setCursor(0,0);
-  delay(700);
+  delay(1);
 }
 
-void display_center(char *msg, bool row = 0, short d = 3000) {
+/**
+ * @brief 
+ * display a message centered in lcd in a certain row.
+ * 
+ * @param msg
+ * message string to be displayed
+ * 
+ * @param row (optional)
+ * 0 (default) means first row, 1 means second row
+ * 
+ * @param d (optional)
+ * delay in ms after displaying msg (default 1000 ms)
+*/
+void display_center(char *msg, bool row = 0, short d = 1000) {
   short l = (16 - strlen(msg))/2; // panjang padding kanan kiri
   char padding[l];
   short i;
@@ -61,10 +76,20 @@ void display_center(char *msg, bool row = 0, short d = 3000) {
   delay(d);
 }
 
+/**
+ * @brief
+ * resets all sensor flags
+*/
 void reset_flags() {
   flag[0] = flag[1] = false;
 }
 
+/**
+ * @brief
+ * check if a person enters.
+ * checks if people count is maxed.
+ * displays a message to the LCD on person entrance.
+*/
 void check_person_in() {
 
   if (dis_b < 30 /* jarak (cm) minimal agar pembacaan ultrasonik dianggap valid*/ && !flag[1]) {
@@ -84,6 +109,12 @@ void check_person_in() {
   }
 }
 
+/**
+ * @brief
+ * check if a person exits.
+ * checks if people count is 0.
+ * displays a message to the LCD on person exit.
+*/
 void check_person_out() {
 
   if (dis_a < 30 /* jarak (cm) minimal agar pembacaan ultrasonik dianggap valid*/ && !flag[0]) {
@@ -103,6 +134,10 @@ void check_person_out() {
   }
 }
 
+/**
+ * @brief
+ * Developer LCD display
+*/
 void dev_display() {
   lcd.clear();
 
@@ -130,6 +165,10 @@ void dev_display() {
   lcd.print(")");
 }
 
+/**
+ * @brief
+ * Final (launch version) LCD display 
+*/
 void final_display() {
   lcd.setCursor(0, 0);
   lcd.print("People: ");
@@ -138,14 +177,30 @@ void final_display() {
   lcd.setCursor(0, 1);
   lcd.print("Light is ");
   if(people_count > 0){
-    digitalWrite(12 /* Relay pin terhubung ke pin 12 Arduino*/, 0x0);
     lcd.print("On");
   } else {
-    digitalWrite(12 /* Relay pin terhubung ke pin 12 Arduino*/, 0x1); // Matikan relay 
     lcd.print("Off");
   }
 }
 
+/**
+ * @brief
+ * updates LED state based on people_count
+*/
+void update_led() {
+  if(people_count > 0 && !led_on) {
+    digitalWrite(12 /* Relay pin terhubung ke pin 12 Arduino*/, 0x1);
+    led_on = true;
+  } else if (people_count == 0 && led_on) {
+    digitalWrite(12 /* Relay pin terhubung ke pin 12 Arduino*/, 0x0);
+    led_on = false;
+  }
+}
+
+/**
+ * @brief
+ * checks if a flag is outdated, then resets it.
+*/
 void check_flag_timeout() {
   for (int i = 0; i < 2; i++) {
     if (flag[i]) {
@@ -156,17 +211,30 @@ void check_flag_timeout() {
   }
 }
 
+/**
+ * @brief
+ * if the reset button is pressed, we reset ONLY THE LCD
+*/
+void handle_reset_btn() {
+  if (!digitalRead(6 /* LCD reset button*/)) {
+    lcd.begin(16, 2);
+    lcd.backlight();
+  }
+}
+
 void setup(){
   Serial.begin(9600); // Inisialisasi komunikasi serial pada 9600 bps
   while (!Serial); // pastikan serial bener2 siap
 
+  pinMode(6 /* LCD reset button*/, 0x2);
   pinMode(12 /* Relay pin terhubung ke pin 12 Arduino*/, 0x1); // Set pin relay sebagai output
   pinMode(3 /* Ultrasonic echo pin 1 terhubung ke pin 3 Arduino */, 0x0);
   pinMode(10 /* Ultrasonic echo pin 2 terhubung ke pin 10 Arduino */, 0x0);
   pinMode(4 /* Ultrasonic trigger pin 1 terhubung ke pin 4 Arduino */, 0x1);
   pinMode(9 /* Ultrasonic trigger pin 2 terhubung ke pin 9 Arduino */, 0x1);
 
-  lcd.init(); // Inisialisasi LCD
+  lcd.init();
+  lcd.begin(16,2); // Inisialisasi LCD
   lcd.backlight(); // Nyalakan backlight LCD
   lcd.setCursor(0, 0);
   lcd.print("     Welcome    ");
@@ -175,21 +243,17 @@ void setup(){
 }
 
 void loop(){
+  handle_reset_btn();
 
   ultra_read(4 /* Ultrasonic trigger pin 1 terhubung ke pin 4 Arduino */, 3 /* Ultrasonic echo pin 1 terhubung ke pin 3 Arduino */, dis_a); delay(10); // Membaca nilai sensor ultrasonic 1
   ultra_read(9 /* Ultrasonic trigger pin 2 terhubung ke pin 9 Arduino */, 10 /* Ultrasonic echo pin 2 terhubung ke pin 10 Arduino */, dis_b); delay(10); // Membaca nilai sensor ultrasonic 2
-
-  // Serial.print("da:");
-  // Serial.println(dis_a);
-  // Serial.print("db:");
-  // Serial.println(dis_b);
-  // Serial.flush();   
 
   check_person_in();
   check_person_out();
   check_flag_timeout();
 
   // final_display();
+  update_led();
   dev_display();
-  delay(20); // Tambahkan delay untuk memperbarui tampilan LCD
+  delay(100); // Tambahkan delay untuk memperbarui tampilan LCD
 }

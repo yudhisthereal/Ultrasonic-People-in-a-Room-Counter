@@ -1,3 +1,7 @@
 {
-    "sketch": "mas_sani.ino"
+    "output": "./build",
+    "sketch": "mas_sani.ino",
+    "board": "arduino:avr:uno",
+    "programmer": "avrispmkii",
+    "port": "/dev/ttyACM0"
 }
