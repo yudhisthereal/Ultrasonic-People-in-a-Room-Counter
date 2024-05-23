@@ -1,8 +1,7 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
-#include <Arduino_FreeRTOS.h> // TODO
 
-#define DEBUG 1
+#define DEBUG
 
 #ifdef DEBUG
   #define DEBUG_PRINT(x) Serial.print(x)
@@ -230,7 +229,7 @@ void handle_reset_btn() {
  * 
  * @param baud Baudrate of the Serial Communication
  */
-void initSerial(unsigned short baud) {
+void initSerial(unsigned long baud) {
   Serial.begin(baud);
   while (!Serial);
 }
