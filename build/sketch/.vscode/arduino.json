@@ -1,0 +1,8 @@
+#line 1 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/.vscode/arduino.json"
+{
+    "output": "./build",
+    "port": "/dev/ttyACM0",
+    "board": "arduino:avr:uno",
+    "programmer": "avrispmkii",
+    "sketch": "mas_sani.ino"
+}
