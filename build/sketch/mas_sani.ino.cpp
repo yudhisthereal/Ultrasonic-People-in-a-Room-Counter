@@ -1,3 +1,5 @@
+#include <Arduino.h>
+#line 1 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>                             // Menggunakan library untuk LCD dengan modul I2C
 
@@ -18,11 +20,31 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);                        // Inisialisasi LCD I
 unsigned long dis_a = 0, dis_b = 0;                        // Variabel untuk menyimpan nilai dari sensor ultrasonic
 unsigned long last_flag_set[2] = {0,0};
 bool flag[2] = {false, false};                             // Variabel flag untuk sensor ultrasonic
-bool led_on = false;                                       // apakah LED on?
 int people_count = 0;                                      // Variabel untuk menyimpan jumlah orang
 
 
 // Fungsi untuk membaca nilai ultrasonic
+#line 25 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+void ultra_read(int pin_t, int pin_e, unsigned long &ultra_dist);
+#line 47 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+void display_count();
+#line 75 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+void reset_flags();
+#line 79 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+void check_person_in();
+#line 98 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+void check_person_out();
+#line 117 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+void dev_display();
+#line 144 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+void final_display();
+#line 160 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+void check_flag_timeout();
+#line 170 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+void setup();
+#line 188 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+void loop();
+#line 25 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
 void ultra_read(int pin_t, int pin_e, unsigned long &ultra_dist){ 
   long time;
 
@@ -45,31 +67,17 @@ void ultra_read(int pin_t, int pin_e, unsigned long &ultra_dist){
   ultra_dist = time / 29 / 2; 
 }
 
-// menampilkan jumlah orang dalam ruangan ("count: <jumlah_orang>")
 void display_count() {
   lcd.setCursor(0,1);
   lcd.print("                "); // clear baris 2
-  lcd.setCursor(4,1);
+  lcd.setCursor(0,1);
   lcd.print("count: ");
   lcd.print(people_count);
   lcd.setCursor(0,0);
-  delay(1);
+  delay(700);
 }
 
-/**
- * @brief 
- * display a message centered in lcd in a certain row.
- * 
- * @param msg
- * message string to be displayed
- * 
- * @param row (optional)
- * 0 (default) means first row, 1 means second row
- * 
- * @param d (optional)
- * delay in ms after displaying msg (default 1000 ms)
-*/
-void display_center(char *msg, bool row = 0, short d = 1000) {
+void display_center(char *msg, bool row = 0, short d = 3000) {
   short l = (16 - strlen(msg))/2; // panjang padding kanan kiri
   char padding[l];
   short i;
@@ -87,20 +95,10 @@ void display_center(char *msg, bool row = 0, short d = 1000) {
   delay(d);
 }
 
-/**
- * @brief
- * resets all sensor flags
-*/
 void reset_flags() {
   flag[0] = flag[1] = false;
 }
 
-/**
- * @brief
- * check if a person enters.
- * checks if people count is maxed.
- * displays a message to the LCD on person entrance.
-*/
 void check_person_in() {
 
   if (dis_b < detect_distance && !flag[1]) {
@@ -120,12 +118,6 @@ void check_person_in() {
   }
 }
 
-/**
- * @brief
- * check if a person exits.
- * checks if people count is 0.
- * displays a message to the LCD on person exit.
-*/
 void check_person_out() {
 
   if (dis_a < detect_distance && !flag[0]) {
@@ -145,10 +137,6 @@ void check_person_out() {
   }
 }
 
-/**
- * @brief
- * Developer LCD display
-*/
 void dev_display() {
   lcd.clear();
 
@@ -176,10 +164,6 @@ void dev_display() {
   lcd.print(")");
 }
 
-/**
- * @brief
- * Final (launch version) LCD display 
-*/
 void final_display() {
   lcd.setCursor(0, 0);                                        
   lcd.print("People: ");
@@ -188,30 +172,14 @@ void final_display() {
   lcd.setCursor(0, 1); 
   lcd.print("Light is ");
   if(people_count > 0){
+    digitalWrite(relay, LOW); 
     lcd.print("On");
-  } else {                                                                 
+  } else {                                                                
+    digitalWrite(relay, HIGH);                               // Matikan relay 
     lcd.print("Off");
   }
 }
 
-/**
- * @brief
- * updates LED state based on people_count
-*/
-void update_led() {
-  if(people_count > 0 && !led_on) {
-    digitalWrite(relay, HIGH);
-    led_on = true;
-  } else if (people_count == 0 && led_on) {
-    digitalWrite(relay, LOW);
-    led_on = false;
-  }
-}
-
-/**
- * @brief
- * checks if a flag is outdated, then resets it.
-*/
 void check_flag_timeout() {
   for (int i = 0; i < 2; i++) {
     if (flag[i]) {
@@ -245,12 +213,17 @@ void loop(){
   ultra_read(t_s1, e_s1, dis_a); delay(10);                // Membaca nilai sensor ultrasonic 1
   ultra_read(t_s2, e_s2, dis_b); delay(10);                // Membaca nilai sensor ultrasonic 2
 
+  // Serial.print("da:");
+  // Serial.println(dis_a);
+  // Serial.print("db:");
+  // Serial.println(dis_b);
+  // Serial.flush();   
+
   check_person_in();
   check_person_out();
   check_flag_timeout();
 
   // final_display();
-  update_led();
   dev_display();
-  delay(100);                                                // Tambahkan delay untuk memperbarui tampilan LCD
+  delay(20);                                                // Tambahkan delay untuk memperbarui tampilan LCD
 }

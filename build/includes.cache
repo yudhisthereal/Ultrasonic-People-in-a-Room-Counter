@@ -1,0 +1,42 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "/home/yudhis/.arduino15/packages/arduino/hardware/avr/1.8.6/cores/arduino"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "/home/yudhis/.arduino15/packages/arduino/hardware/avr/1.8.6/variants/standard"
+  },
+  {
+    "Sourcefile": "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/build/sketch/mas_sani.ino.cpp",
+    "Include": "Wire.h",
+    "Includepath": "/home/yudhis/.arduino15/packages/arduino/hardware/avr/1.8.6/libraries/Wire/src"
+  },
+  {
+    "Sourcefile": "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/build/sketch/mas_sani.ino.cpp",
+    "Include": "LiquidCrystal_I2C.h",
+    "Includepath": "/home/yudhis/Arduino/libraries/LiquidCrystal_I2C"
+  },
+  {
+    "Sourcefile": "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/build/sketch/mas_sani.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/yudhis/.arduino15/packages/arduino/hardware/avr/1.8.6/libraries/Wire/src/Wire.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/yudhis/.arduino15/packages/arduino/hardware/avr/1.8.6/libraries/Wire/src/utility/twi.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/yudhis/Arduino/libraries/LiquidCrystal_I2C/LiquidCrystal_I2C.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]
