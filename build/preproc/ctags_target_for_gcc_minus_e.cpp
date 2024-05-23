@@ -1,9 +1,10 @@
 # 1 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 # 2 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino" 2
 # 3 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino" 2
+# 4 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino" 2
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); // Inisialisasi LCD I2C dengan alamat 0x27 dan ukuran 16x2
-# 20 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+# 21 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 unsigned long dis_a = 0, dis_b = 0; // Variabel untuk menyimpan nilai dari sensor ultrasonic
 unsigned long last_flag_set[2] = {0,0};
 bool flag[2] = {false, false}; // Variabel flag untuk sensor ultrasonic
@@ -42,7 +43,7 @@ void display_count() {
   lcd.print("count: ");
   lcd.print(people_count);
   lcd.setCursor(0,0);
-  delay(1);
+  vPortDelay(1);
 }
 
 /**
@@ -73,7 +74,7 @@ void display_center(char *msg, bool row = 0, short d = 1000) {
   lcd.print(padding);
   lcd.print(msg);
   lcd.setCursor(0,0);
-  delay(d);
+  vPortDelay(d);
 }
 
 /**
@@ -239,14 +240,14 @@ void setup(){
   lcd.setCursor(0, 0);
   lcd.print("     Welcome    ");
   Serial.print("hello");
-  delay(1000); // Tunggu sebentar
+  vPortDelay(1000); // Tunggu sebentar
 }
 
 void loop(){
   handle_reset_btn();
 
-  ultra_read(4 /* Ultrasonic trigger pin 1 terhubung ke pin 4 Arduino */, 3 /* Ultrasonic echo pin 1 terhubung ke pin 3 Arduino */, dis_a); delay(10); // Membaca nilai sensor ultrasonic 1
-  ultra_read(9 /* Ultrasonic trigger pin 2 terhubung ke pin 9 Arduino */, 10 /* Ultrasonic echo pin 2 terhubung ke pin 10 Arduino */, dis_b); delay(10); // Membaca nilai sensor ultrasonic 2
+  ultra_read(4 /* Ultrasonic trigger pin 1 terhubung ke pin 4 Arduino */, 3 /* Ultrasonic echo pin 1 terhubung ke pin 3 Arduino */, dis_a); vPortDelay(10); // Membaca nilai sensor ultrasonic 1
+  ultra_read(9 /* Ultrasonic trigger pin 2 terhubung ke pin 9 Arduino */, 10 /* Ultrasonic echo pin 2 terhubung ke pin 10 Arduino */, dis_b); vPortDelay(10); // Membaca nilai sensor ultrasonic 2
 
   check_person_in();
   check_person_out();
@@ -255,5 +256,5 @@ void loop(){
   // final_display();
   update_led();
   dev_display();
-  delay(100); // Tambahkan delay untuk memperbarui tampilan LCD
+  vPortDelay(100); // Tambahkan delay untuk memperbarui tampilan LCD
 }
