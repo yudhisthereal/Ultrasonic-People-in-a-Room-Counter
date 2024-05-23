@@ -1,5 +1,5 @@
-/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/build/sketch/mas_sani.ino.cpp.o: \
- /home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/build/sketch/mas_sani.ino.cpp \
+/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/build/sketch/ultrasonic_person_counter.ino.cpp.o: \
+ /home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/build/sketch/ultrasonic_person_counter.ino.cpp \
  /home/yudhis/.arduino15/packages/arduino/hardware/avr/1.8.6/cores/arduino/Arduino.h \
  /home/yudhis/.arduino15/packages/arduino/hardware/avr/1.8.6/cores/arduino/binary.h \
  /home/yudhis/.arduino15/packages/arduino/hardware/avr/1.8.6/cores/arduino/WCharacter.h \

@@ -1,4 +1,4 @@
-/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/build/libraries/Wire/utility/twi.c.o: \
+/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/build/libraries/Wire/utility/twi.c.o: \
  /home/yudhis/.arduino15/packages/arduino/hardware/avr/1.8.6/libraries/Wire/src/utility/twi.c \
  /home/yudhis/.arduino15/packages/arduino/hardware/avr/1.8.6/cores/arduino/Arduino.h \
  /home/yudhis/.arduino15/packages/arduino/hardware/avr/1.8.6/cores/arduino/binary.h \

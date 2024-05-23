@@ -1,9 +1,9 @@
-# 1 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
-# 2 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino" 2
-# 3 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino" 2
+# 1 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+# 2 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino" 2
+# 3 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino" 2
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); // Inisialisasi LCD I2C dengan alamat 0x27 dan ukuran 16x2
-# 20 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+# 20 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 unsigned long dis_a = 0, dis_b = 0; // Variabel untuk menyimpan nilai dari sensor ultrasonic
 unsigned long last_flag_set[2] = {0,0};
 bool flag[2] = {false, false}; // Variabel flag untuk sensor ultrasonic

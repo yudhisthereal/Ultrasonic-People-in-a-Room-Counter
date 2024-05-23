@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#line 1 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+#line 1 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>                             // Menggunakan library untuk LCD dengan modul I2C
 
@@ -27,31 +27,31 @@ int people_count = 0;                                      // Variabel untuk men
 
 
 // Fungsi untuk membaca nilai ultrasonic
-#line 28 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+#line 28 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void ultra_read(int pin_t, int pin_e, unsigned long &ultra_dist);
-#line 51 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+#line 51 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void display_count();
-#line 96 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+#line 96 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void reset_flags();
-#line 106 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+#line 106 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void check_person_in();
-#line 131 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+#line 131 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void check_person_out();
-#line 154 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+#line 154 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void dev_display();
-#line 185 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+#line 185 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void final_display();
-#line 203 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+#line 203 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void update_led();
-#line 217 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+#line 217 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void check_flag_timeout();
-#line 231 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+#line 231 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void handle_reset_btn();
-#line 238 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+#line 238 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void setup();
-#line 258 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+#line 258 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void loop();
-#line 28 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/mas_sani.ino"
+#line 28 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void ultra_read(int pin_t, int pin_e, unsigned long &ultra_dist){ 
   long time;
 

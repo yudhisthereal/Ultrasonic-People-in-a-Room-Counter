@@ -1,6 +1,6 @@
 {
     "output": "./build",
-    "sketch": "mas_sani.ino",
+    "sketch": "ultrasonic_person_counter.ino",
     "board": "arduino:avr:uno",
     "programmer": "avrispmkii",
     "port": "/dev/ttyACM0"

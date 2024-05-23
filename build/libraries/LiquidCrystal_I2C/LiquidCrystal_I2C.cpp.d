@@ -1,4 +1,4 @@
-/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/build/libraries/LiquidCrystal_I2C/LiquidCrystal_I2C.cpp.o: \
+/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/build/libraries/LiquidCrystal_I2C/LiquidCrystal_I2C.cpp.o: \
  /home/yudhis/Arduino/libraries/LiquidCrystal_I2C/LiquidCrystal_I2C.cpp \
  /home/yudhis/Arduino/libraries/LiquidCrystal_I2C/LiquidCrystal_I2C.h \
  /home/yudhis/.arduino15/packages/arduino/hardware/avr/1.8.6/cores/arduino/Print.h \

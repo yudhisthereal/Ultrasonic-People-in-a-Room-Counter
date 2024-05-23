@@ -1,7 +1,7 @@
-#line 1 "/home/yudhis/Documents/Kuliah/Embed/proyek/mas_sani/.vscode/arduino.json"
+#line 1 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/.vscode/arduino.json"
 {
     "output": "./build",
-    "sketch": "mas_sani.ino",
+    "sketch": "ultrasonic_person_counter.ino",
     "board": "arduino:avr:uno",
     "programmer": "avrispmkii",
     "port": "/dev/ttyACM0"
