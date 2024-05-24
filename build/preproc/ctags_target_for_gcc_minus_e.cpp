@@ -2,7 +2,8 @@
 # 2 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino" 2
 # 3 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino" 2
 // #include <Arduino_FreeRTOS.h>
-# 27 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+// #include <semphr.h>
+# 28 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 unsigned long dis_a = 0, dis_b = 0;
@@ -237,7 +238,7 @@ void initLcd() {
 }
 
 /**
- * @brief Greet the user upon startup
+ * @brief Greets the user :)
  */
 void greet() {
   lcd.print("     Welcome    ");
@@ -248,7 +249,6 @@ void setup() {
   initSerial(115200);
   initPins();
   initLcd();
-  greet();
 }
 
 void loop() {

@@ -1,6 +1,7 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 // #include <Arduino_FreeRTOS.h>
+// #include <semphr.h>
 
 #define DEBUG
 
@@ -24,13 +25,43 @@
 #define t_s2 9
 #define relay 12
 
+
 LiquidCrystal_I2C lcd(0x27, 16, 2);
+
 
 unsigned long dis_a = 0, dis_b = 0;
 unsigned long last_flag_set[2] = {0, 0};
 bool flag[2] = {false, false};
 bool led_on = false;
 int people_count = 0;
+
+
+void initSerial(unsigned long);
+void initPins(void);
+void initLcd(void);
+void checkFlagTimeout(void);
+void updateLed(void);
+
+void setup() {
+  initSerial(115200);
+  initPins();
+  initLcd();
+}
+
+void loop() {
+  handleResetButton();
+
+  ultraRead(t_s1, e_s1, dis_a); delay(10);
+  ultraRead(t_s2, e_s2, dis_b); delay(10);
+  checkPersonIn();
+  checkPersonOut();
+  checkFlagTimeout();
+
+  // finalDisplay();
+  updateLed();
+  devDisplay();
+  delay(100);
+}
 
 /**
  * @brief Read ultrasonic sensor distance
@@ -39,7 +70,7 @@ int people_count = 0;
  * @param pin_e Echo pin
  * @param ultra_dist Variable to store distance
  */
-void ultra_read(int pin_t, int pin_e, unsigned long &ultra_dist) {
+void ultraRead(int pin_t, int pin_e, unsigned long &ultra_dist) {
   long time;
 
   digitalWrite(pin_t, LOW);
@@ -57,7 +88,7 @@ void ultra_read(int pin_t, int pin_e, unsigned long &ultra_dist) {
 /**
  * @brief Display person count on LCD
  */
-void display_count() {
+void displayCount() {
   lcd.setCursor(0, 1);
   lcd.print("                ");
   lcd.setCursor(4, 1);
@@ -74,7 +105,7 @@ void display_count() {
  * @param row Row number (0 or 1)
  * @param d Delay after displaying the message
  */
-void display_center(char *msg, bool row = 0, short d = 1000) {
+void displayCenter(char *msg, bool row = 0, short d = 1000) {
   short l = (16 - strlen(msg))/2;
   char padding[l];
   short i;
@@ -95,26 +126,26 @@ void display_center(char *msg, bool row = 0, short d = 1000) {
 /**
  * @brief Reset all sensor flags
  */
-void reset_flags() {
+void resetFlags() {
   flag[0] = flag[1] = false;
 }
 
 /**
  * @brief Check if a person enters
  */
-void check_person_in() {
+void checkPersonIn() {
   if (dis_b < detect_distance && !flag[1]) {
     flag[1] = true;
     last_flag_set[1] = millis();
 
     if (flag[0]) {
-      reset_flags();
+      resetFlags();
       if (people_count < room_capacity) {
         people_count++;
-        display_count();
-        display_center("Person entered!");
+        displayCount();
+        displayCenter("Person entered!");
       } else {
-        display_center("Room Full!");
+        displayCenter("Room Full!");
       }
     }
   }
@@ -123,19 +154,19 @@ void check_person_in() {
 /**
  * @brief Check if a person exits
  */
-void check_person_out() {
+void checkPersonOut() {
   if (dis_a < detect_distance && !flag[0]) {
     flag[0] = true;
     last_flag_set[0] = millis();
 
     if (flag[1]) {
-      reset_flags();
+      resetFlags();
       if (people_count > 0) {
         people_count--;
-        display_count();
-        display_center("Person exited!");
+        displayCount();
+        displayCenter("Person exited!");
       } else {
-        display_center("Ghost exited!?");
+        displayCenter("Ghost exited!?");
       }
     }
   }
@@ -144,12 +175,12 @@ void check_person_out() {
 /**
  * @brief Developer mode LCD display
  */
-void dev_display() {
+void devDisplay() {
   lcd.clear();
 
   if (people_count == room_capacity) {
     lcd.print("Room Full");
-    display_count();
+    displayCount();
     return;
   }
 
@@ -174,7 +205,7 @@ void dev_display() {
 /**
  * @brief Final (launch version) LCD display
  */
-void final_display() {
+void finalDisplay() {
   lcd.setCursor(0, 0);
   lcd.print("People: ");
   lcd.print(people_count);
@@ -191,7 +222,7 @@ void final_display() {
 /**
  * @brief Update LED state based on people_count
  */
-void update_led() {
+void updateLed() {
   if (people_count > 0 && !led_on) {
     digitalWrite(relay, HIGH);
     led_on = true;
@@ -204,7 +235,7 @@ void update_led() {
 /**
  * @brief Check if a flag is outdated, then resets it
  */
-void check_flag_timeout() {
+void checkFlagTimeout() {
   for (int i = 0; i < 2; i++) {
     if (flag[i]) {
       if (millis() - last_flag_set[i] > flag_timeout) {
@@ -218,7 +249,7 @@ void check_flag_timeout() {
  * @brief Handle reset button press
  * If the reset button is pressed, we reset ONLY THE LCD
  */
-void handle_reset_btn() {
+void handleResetButton() {
   if (!digitalRead(reset_btn)) {
     lcd.begin(16, 2);
     lcd.backlight();
@@ -258,31 +289,9 @@ void initLcd() {
 }
 
 /**
- * @brief Greet the user upon startup
+ * @brief Greets the user :)
  */
 void greet() {
   lcd.print("     Welcome    ");
   DEBUG_PRINTLN("System Ready");
-}
-
-void setup() {
-  initSerial(115200);
-  initPins();
-  initLcd();
-  greet();
-}
-
-void loop() {
-  handle_reset_btn();
-
-  ultra_read(t_s1, e_s1, dis_a); delay(10);
-  ultra_read(t_s2, e_s2, dis_b); delay(10);
-  check_person_in();
-  check_person_out();
-  check_flag_timeout();
-
-  // final_display();
-  update_led();
-  dev_display();
-  delay(100);
 }
