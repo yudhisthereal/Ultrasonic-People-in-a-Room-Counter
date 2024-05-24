@@ -1,7 +1,8 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
+#include <EEPROM.h>
 
-#define DEBUG_MODE
+// #define DEBUG_MODE
 
 #ifdef DEBUG_MODE
 #define DEBUG_PRINT(x) Serial.print(x)
@@ -14,8 +15,13 @@
 #endif
 
 #define DETECT_DISTANCE 30
-#define FLAG_TIMEOUT 7000
+#define FLAG_TIMEOUT 3500
 #define LCD_DELAY 1000
+#define DELAY_AFTER_COUNT 1500
+
+#define EVENT_NONE 0
+#define EVENT_PERSON_ENTER 1
+#define EVENT_PERSON_EXIT 2
 
 #define RST_BTN_PIN 6
 #define ECHO_S1_PIN 3
@@ -29,8 +35,11 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 unsigned long distance1 = 0, distance2 = 0;
 unsigned long lastFlagSet[2] = {0, 0};
 unsigned long lastLcdUpdate = 0;
+unsigned long lcdPausedAt = 0;
+int lcdPauseDuration = 0;
 bool flag[2] = {false, false};
 bool ledOn = false;
+byte lastCounterEvent = EVENT_NONE;
 int peopleCount = 0;
 
 /**
@@ -52,6 +61,15 @@ void readUltrasonicSensor(int triggerPin, int echoPin, unsigned long &distance)
 
   duration = pulseIn(echoPin, HIGH);
   distance = duration / 29 / 2; // Convert time to distance in cm
+}
+
+/**
+ * @brief pauses the lcd main update (non blocking)
+ */
+void pauseLcd(int duration)
+{
+  lcdPausedAt = millis();
+  lcdPauseDuration = duration;
 }
 
 /**
@@ -94,6 +112,7 @@ void displayCenteredMessage(const char *msg, bool row = 0)
 void resetFlags()
 {
   flag[0] = flag[1] = false;
+  lastCounterEvent = EVENT_NONE;
 }
 
 /**
@@ -119,9 +138,9 @@ void checkPersonIn()
         lcd.clear();
         displayCenteredMessage("Room Full!");
       }
-      delay(2000);
-      updateSensorReadings();
-      resetFlags();
+
+      lastCounterEvent = EVENT_PERSON_ENTER;
+      pauseLcd(DELAY_AFTER_COUNT);
     }
   }
 }
@@ -150,9 +169,9 @@ void checkPersonOut()
         lcd.clear();
         displayCenteredMessage("Ghost exited!?");
       }
-      delay(2000);
-      updateSensorReadings();
-      resetFlags();
+
+      lastCounterEvent = EVENT_PERSON_EXIT;
+      pauseLcd(DELAY_AFTER_COUNT);
     }
   }
 }
@@ -191,6 +210,8 @@ void displayFinalInfo()
   lcd.setCursor(0, 0);
   lcd.print("People: ");
   lcd.print(peopleCount);
+  lcd.print("/");
+  lcd.print(ROOM_CAPACITY);
   lcd.setCursor(0, 1);
   lcd.print("Light is ");
   lcd.print(peopleCount > 0 ? "On" : "Off");
@@ -216,8 +237,24 @@ void updateLedState()
 /**
  * @brief Check if a flag is outdated, then reset it
  */
-void checkFlagTimeout()
+void attemptFlagReset()
 {
+  // if a person just entered/exited the room
+  // but the last sensor detecting the person is still detecting the person
+  // i.e. the person is still in the detecting range after being counted
+  // we don't want to reset the flags, which would cause bugs.
+  // only reset when the person gets out of range.
+  if (lastCounterEvent != EVENT_NONE)
+  {
+    delay(100);
+    if (distance1 > DETECT_DISTANCE && distance2 > DETECT_DISTANCE)
+    {
+      resetFlags();
+    }
+    return;
+  }
+
+  // check for outdated flags, tries to reset them
   for (int i = 0; i < 2; i++)
   {
     if (flag[i] && millis() - lastFlagSet[i] > FLAG_TIMEOUT)
@@ -305,9 +342,14 @@ void greetUser()
 /**
  * @brief Update the display on the LCD
  */
-void updateDisplay()
+void updateDisplay(bool forced = false)
 {
-  if (millis() - lastLcdUpdate >= LCD_DELAY)
+  if (millis() - lcdPausedAt < lcdPauseDuration && !forced)
+  {
+    return; // lcd paused
+  }
+
+  if (millis() - lastLcdUpdate >= LCD_DELAY || forced)
   {
     lastLcdUpdate = millis();
 #ifdef DEBUG_MODE
@@ -318,23 +360,45 @@ void updateDisplay()
   }
 }
 
+void savePeopleCount()
+{
+  EEPROM.update(1, peopleCount);
+}
+
+void loadPeopleCount()
+{
+  if (EEPROM.read(0) == true)
+  {
+    peopleCount = EEPROM.read(1);
+  }
+  else
+  {
+    peopleCount = 0;
+    EEPROM.write(0, true);
+  }
+}
+
 void setup()
 {
   initializeSerial(115200);
   initializePins();
   initializeLcd();
-  greetUser();
+  loadPeopleCount();
   resetFlags();
+  greetUser();
+  updateDisplay(true);
 }
 
 void loop()
 {
+
   handleResetButton();
 
   updateSensorReadings();
   checkPersonIn();
   checkPersonOut();
-  checkFlagTimeout();
+  attemptFlagReset();
+  savePeopleCount();
 
   updateDisplay();
   updateLedState();

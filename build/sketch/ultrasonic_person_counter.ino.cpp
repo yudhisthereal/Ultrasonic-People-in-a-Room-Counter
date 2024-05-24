@@ -2,122 +2,144 @@
 #line 1 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
-// #include <Arduino_FreeRTOS.h>
-// #include <semphr.h>
+#include <EEPROM.h>
 
-#define DEBUG
+// #define DEBUG_MODE
 
-#ifdef DEBUG
-  #define DEBUG_PRINT(x) Serial.print(x)
-  #define DEBUG_PRINTLN(x) Serial.println(x)
-  #define room_capacity 3 // less capacity means faster checks (closer upper and lower boundaries)
+#ifdef DEBUG_MODE
+#define DEBUG_PRINT(x) Serial.print(x)
+#define DEBUG_PRINTLN(x) Serial.println(x)
+#define ROOM_CAPACITY 3 // Less capacity means faster checks (closer upper and lower boundaries)
 #else
-  #define DEBUG_PRINT(x)
-  #define DEBUG_PRINTLN(x)
-  #define room_capacity 20
+#define DEBUG_PRINT(x)
+#define DEBUG_PRINTLN(x)
+#define ROOM_CAPACITY 20
 #endif
 
-#define detect_distance 30
-#define flag_timeout 7000
+#define DETECT_DISTANCE 30
+#define FLAG_TIMEOUT 3500
+#define LCD_DELAY 1000
+#define DELAY_AFTER_COUNT 1500
 
-#define reset_btn 6
-#define e_s1 3
-#define t_s1 4
-#define e_s2 10
-#define t_s2 9
-#define relay 12
+#define EVENT_NONE 0
+#define EVENT_PERSON_ENTER 1
+#define EVENT_PERSON_EXIT 2
+
+#define RST_BTN_PIN 6
+#define ECHO_S1_PIN 3
+#define TRIG_S1_PIN 4
+#define ECHO_S2_PIN 10
+#define TRIG_S2_PIN 9
+#define RELAY_PIN 12
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
-unsigned long dis_a = 0, dis_b = 0;
-unsigned long last_flag_set[2] = {0, 0};
+unsigned long distance1 = 0, distance2 = 0;
+unsigned long lastFlagSet[2] = {0, 0};
+unsigned long lastLcdUpdate = 0;
+unsigned long lcdPausedAt = 0;
+int lcdPauseDuration = 0;
 bool flag[2] = {false, false};
-bool led_on = false;
-int people_count = 0;
+bool ledOn = false;
+byte lastCounterEvent = EVENT_NONE;
+int peopleCount = 0;
 
 /**
- * @brief Read ultrasonic sensor distance
- * 
- * @param pin_t Trigger pin
- * @param pin_e Echo pin
- * @param ultra_dist Variable to store distance
+ * @brief Read distance from ultrasonic sensor
+ *
+ * @param triggerPin Trigger pin of the ultrasonic sensor
+ * @param echoPin Echo pin of the ultrasonic sensor
+ * @param distance Reference to store the distance read from the sensor
  */
-#line 43 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
-void ultra_read(int pin_t, int pin_e, unsigned long &ultra_dist);
-#line 61 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
-void display_count();
-#line 99 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
-void reset_flags();
-#line 106 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
-void check_person_in();
-#line 127 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
-void check_person_out();
-#line 148 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
-void dev_display();
-#line 178 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
-void final_display();
-#line 195 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
-void update_led();
-#line 208 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
-void check_flag_timeout();
-#line 222 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
-void handle_reset_btn();
-#line 234 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
-void initSerial(unsigned long baud);
-#line 242 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
-void initPins();
-#line 254 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
-void initLcd();
-#line 264 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
-void greet();
-#line 269 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+#line 52 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+void readUltrasonicSensor(int triggerPin, int echoPin, unsigned long &distance);
+#line 69 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+void pauseLcd(int duration);
+#line 78 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+void displayCount();
+#line 112 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+void resetFlags();
+#line 121 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+void checkPersonIn();
+#line 151 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+void checkPersonOut();
+#line 182 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+void displayDebugInfo();
+#line 207 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+void displayFinalInfo();
+#line 223 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+void updateLedState();
+#line 240 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+void attemptFlagReset();
+#line 271 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+void handleResetButton();
+#line 288 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+void updateSensorReadings();
+#line 301 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+void initializeSerial(unsigned long baudRate);
+#line 311 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+void initializePins();
+#line 324 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+void initializeLcd();
+#line 335 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+void greetUser();
+#line 363 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+void savePeopleCount();
+#line 368 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+void loadPeopleCount();
+#line 381 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void setup();
-#line 275 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+#line 392 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void loop();
-#line 43 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
-void ultra_read(int pin_t, int pin_e, unsigned long &ultra_dist) {
-  long time;
+#line 52 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+void readUltrasonicSensor(int triggerPin, int echoPin, unsigned long &distance)
+{
+  long duration;
 
-  digitalWrite(pin_t, LOW);
+  digitalWrite(triggerPin, LOW);
   delayMicroseconds(2);
-
-  digitalWrite(pin_t, HIGH);
+  digitalWrite(triggerPin, HIGH);
   delayMicroseconds(10);
-  digitalWrite(pin_t, LOW);
+  digitalWrite(triggerPin, LOW);
 
-  time = pulseIn(pin_e, HIGH);
-
-  ultra_dist = time / 29 / 2;
+  duration = pulseIn(echoPin, HIGH);
+  distance = duration / 29 / 2; // Convert time to distance in cm
 }
 
 /**
- * @brief Display person count on LCD
+ * @brief pauses the lcd main update (non blocking)
  */
-void display_count() {
+void pauseLcd(int duration)
+{
+  lcdPausedAt = millis();
+  lcdPauseDuration = duration;
+}
+
+/**
+ * @brief Display people count on the LCD
+ */
+void displayCount()
+{
   lcd.setCursor(0, 1);
   lcd.print("                ");
   lcd.setCursor(4, 1);
-  lcd.print("count: ");
-  lcd.print(people_count);
+  lcd.print("Count: ");
+  lcd.print(peopleCount);
   lcd.setCursor(0, 0);
-  delay(1);
 }
 
 /**
- * @brief Display message centered on LCD
- * 
+ * @brief Display a message centered on the LCD
+ *
  * @param msg Message to display
  * @param row Row number (0 or 1)
- * @param d Delay after displaying the message
  */
-void display_center(char *msg, bool row = 0, short d = 1000) {
-  short l = (16 - strlen(msg))/2;
-  char padding[l];
-  short i;
-  for (i = 0; i < l; i++) {
-    padding[i] = ' ';
-  }
-  padding[i] = '\0';
+void displayCenteredMessage(const char *msg, bool row = 0)
+{
+  short paddingLength = (16 - strlen(msg)) / 2;
+  char padding[paddingLength + 1];
+  memset(padding, ' ', paddingLength);
+  padding[paddingLength] = '\0';
 
   lcd.setCursor(0, row);
   lcd.print("                ");
@@ -125,72 +147,87 @@ void display_center(char *msg, bool row = 0, short d = 1000) {
   lcd.print(padding);
   lcd.print(msg);
   lcd.setCursor(0, 0);
-  delay(d);
 }
 
 /**
  * @brief Reset all sensor flags
  */
-void reset_flags() {
+void resetFlags()
+{
   flag[0] = flag[1] = false;
+  lastCounterEvent = EVENT_NONE;
 }
 
 /**
- * @brief Check if a person enters
+ * @brief Check if a person entered the room
  */
-void check_person_in() {
-  if (dis_b < detect_distance && !flag[1]) {
+void checkPersonIn()
+{
+  if (distance2 <= DETECT_DISTANCE && !flag[1])
+  {
     flag[1] = true;
-    last_flag_set[1] = millis();
+    lastFlagSet[1] = millis();
 
-    if (flag[0]) {
-      reset_flags();
-      if (people_count < room_capacity) {
-        people_count++;
-        display_count();
-        display_center("Person entered!");
-      } else {
-        display_center("Room Full!");
+    if (flag[0])
+    {
+      if (peopleCount < ROOM_CAPACITY)
+      {
+        peopleCount++;
+        displayCount();
+        displayCenteredMessage("Person entered!");
       }
+      else
+      {
+        lcd.clear();
+        displayCenteredMessage("Room Full!");
+      }
+
+      lastCounterEvent = EVENT_PERSON_ENTER;
+      pauseLcd(DELAY_AFTER_COUNT);
     }
   }
 }
 
 /**
- * @brief Check if a person exits
+ * @brief Check if a person exited the room
  */
-void check_person_out() {
-  if (dis_a < detect_distance && !flag[0]) {
+void checkPersonOut()
+{
+
+  if (distance1 <= DETECT_DISTANCE && !flag[0])
+  {
     flag[0] = true;
-    last_flag_set[0] = millis();
+    lastFlagSet[0] = millis();
 
-    if (flag[1]) {
-      reset_flags();
-      if (people_count > 0) {
-        people_count--;
-        display_count();
-        display_center("Person exited!");
-      } else {
-        display_center("Ghost exited!?");
+    if (flag[1])
+    {
+      if (peopleCount > 0)
+      {
+        peopleCount--;
+        displayCount();
+        displayCenteredMessage("Person exited!");
       }
+      else
+      {
+        lcd.clear();
+        displayCenteredMessage("Ghost exited!?");
+      }
+
+      lastCounterEvent = EVENT_PERSON_EXIT;
+      pauseLcd(DELAY_AFTER_COUNT);
     }
   }
 }
 
 /**
- * @brief Developer mode LCD display
+ * @brief Display debug information on the LCD
  */
-void dev_display() {
+void displayDebugInfo()
+{
   lcd.clear();
 
-  if (people_count == room_capacity) {
-    lcd.print("Room Full");
-    display_count();
-    return;
-  }
-
   lcd.print("S1: ");
-  lcd.print(dis_a);
+  lcd.print(distance1);
   lcd.print("cm");
   lcd.setCursor(12, 0);
   lcd.print(" (");
@@ -199,7 +236,7 @@ void dev_display() {
 
   lcd.setCursor(0, 1);
   lcd.print("S2: ");
-  lcd.print(dis_b);
+  lcd.print(distance2);
   lcd.print("cm");
   lcd.setCursor(12, 1);
   lcd.print(" (");
@@ -208,85 +245,127 @@ void dev_display() {
 }
 
 /**
- * @brief Final (launch version) LCD display
+ * @brief Display final information on the LCD
  */
-void final_display() {
+void displayFinalInfo()
+{
+  lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("People: ");
-  lcd.print(people_count);
-  lcd.print("  ");
+  lcd.print(peopleCount);
+  lcd.print("/");
+  lcd.print(ROOM_CAPACITY);
   lcd.setCursor(0, 1);
   lcd.print("Light is ");
-  if (people_count > 0) {
-    lcd.print("On");
-  } else {
-    lcd.print("Off");
+  lcd.print(peopleCount > 0 ? "On" : "Off");
+}
+
+/**
+ * @brief Update LED state based on people count
+ */
+void updateLedState()
+{
+  if (peopleCount > 0 && !ledOn)
+  {
+    digitalWrite(RELAY_PIN, HIGH);
+    ledOn = true;
+  }
+  else if (peopleCount == 0 && ledOn)
+  {
+    digitalWrite(RELAY_PIN, LOW);
+    ledOn = false;
   }
 }
 
 /**
- * @brief Update LED state based on people_count
+ * @brief Check if a flag is outdated, then reset it
  */
-void update_led() {
-  if (people_count > 0 && !led_on) {
-    digitalWrite(relay, HIGH);
-    led_on = true;
-  } else if (people_count == 0 && led_on) {
-    digitalWrite(relay, LOW);
-    led_on = false;
+void attemptFlagReset()
+{
+  // if a person just entered/exited the room
+  // but the last sensor detecting the person is still detecting the person
+  // i.e. the person is still in the detecting range after being counted
+  // we don't want to reset the flags, which would cause bugs.
+  // only reset when the person gets out of range.
+  if (lastCounterEvent != EVENT_NONE)
+  {
+    delay(100);
+    if (distance1 > DETECT_DISTANCE && distance2 > DETECT_DISTANCE)
+    {
+      resetFlags();
+    }
+    return;
   }
-}
 
-/**
- * @brief Check if a flag is outdated, then resets it
- */
-void check_flag_timeout() {
-  for (int i = 0; i < 2; i++) {
-    if (flag[i]) {
-      if (millis() - last_flag_set[i] > flag_timeout) {
-        flag[i] = false;
-      }
+  // check for outdated flags, tries to reset them
+  for (int i = 0; i < 2; i++)
+  {
+    if (flag[i] && millis() - lastFlagSet[i] > FLAG_TIMEOUT)
+    {
+      flag[i] = false;
     }
   }
 }
 
 /**
  * @brief Handle reset button press
- * If the reset button is pressed, we reset ONLY THE LCD
+ * If the reset button is pressed, reset only the LCD
  */
-void handle_reset_btn() {
-  if (!digitalRead(reset_btn)) {
-    lcd.begin(16, 2);
-    lcd.backlight();
+void handleResetButton()
+{
+  if (digitalRead(RST_BTN_PIN))
+  {
+    delay(25);
+    if (digitalRead(RST_BTN_PIN))
+    {
+      lcd.begin(16, 2);
+      lcd.backlight();
+      delay(1000);
+    }
   }
 }
 
 /**
- * @brief Initialize Serial Monitor
- * 
- * @param baud Baudrate of the Serial Communication
+ * @brief Update sensor readings
  */
-void initSerial(unsigned long baud) {
-  Serial.begin(baud);
-  while (!Serial);
+void updateSensorReadings()
+{
+  readUltrasonicSensor(TRIG_S1_PIN, ECHO_S1_PIN, distance1);
+  delay(3);
+  readUltrasonicSensor(TRIG_S2_PIN, ECHO_S2_PIN, distance2);
+  delay(3);
+}
+
+/**
+ * @brief Initialize serial communication
+ *
+ * @param baudRate Baud rate of the serial communication
+ */
+void initializeSerial(unsigned long baudRate)
+{
+  Serial.begin(baudRate);
+  while (!Serial)
+    ;
 }
 
 /**
  * @brief Initialize pin modes
  */
-void initPins() {
-  pinMode(reset_btn, INPUT_PULLUP);
-  pinMode(relay, OUTPUT);
-  pinMode(e_s1, INPUT);
-  pinMode(e_s2, INPUT);
-  pinMode(t_s1, OUTPUT);
-  pinMode(t_s2, OUTPUT);
+void initializePins()
+{
+  pinMode(RST_BTN_PIN, INPUT_PULLUP);
+  pinMode(RELAY_PIN, OUTPUT);
+  pinMode(ECHO_S1_PIN, INPUT);
+  pinMode(ECHO_S2_PIN, INPUT);
+  pinMode(TRIG_S1_PIN, OUTPUT);
+  pinMode(TRIG_S2_PIN, OUTPUT);
 }
 
 /**
  * @brief Initialize the LCD
  */
-void initLcd() {
+void initializeLcd()
+{
   lcd.init();
   lcd.begin(16, 2);
   lcd.backlight();
@@ -294,30 +373,77 @@ void initLcd() {
 }
 
 /**
- * @brief Greets the user :)
+ * @brief Greet the user upon startup
  */
-void greet() {
+void greetUser()
+{
   lcd.print("     Welcome    ");
   DEBUG_PRINTLN("System Ready");
+  lastLcdUpdate = millis();
 }
 
-void setup() {
-  initSerial(115200);
-  initPins();
-  initLcd();
+/**
+ * @brief Update the display on the LCD
+ */
+void updateDisplay(bool forced = false)
+{
+  if (millis() - lcdPausedAt < lcdPauseDuration && !forced)
+  {
+    return; // lcd paused
+  }
+
+  if (millis() - lastLcdUpdate >= LCD_DELAY || forced)
+  {
+    lastLcdUpdate = millis();
+#ifdef DEBUG_MODE
+    displayDebugInfo();
+#else
+    displayFinalInfo();
+#endif
+  }
 }
 
-void loop() {
-  handle_reset_btn();
-
-  ultra_read(t_s1, e_s1, dis_a); delay(10);
-  ultra_read(t_s2, e_s2, dis_b); delay(10);
-  check_person_in();
-  check_person_out();
-  check_flag_timeout();
-
-  // final_display();
-  update_led();
-  dev_display();
-  delay(100);
+void savePeopleCount()
+{
+  EEPROM.update(1, peopleCount);
 }
+
+void loadPeopleCount()
+{
+  if (EEPROM.read(0) == true)
+  {
+    peopleCount = EEPROM.read(1);
+  }
+  else
+  {
+    peopleCount = 0;
+    EEPROM.write(0, true);
+  }
+}
+
+void setup()
+{
+  initializeSerial(115200);
+  initializePins();
+  initializeLcd();
+  loadPeopleCount();
+  resetFlags();
+  greetUser();
+  updateDisplay(true);
+}
+
+void loop()
+{
+
+  handleResetButton();
+
+  updateSensorReadings();
+  checkPersonIn();
+  checkPersonOut();
+  attemptFlagReset();
+  savePeopleCount();
+
+  updateDisplay();
+  updateLedState();
+}
+
