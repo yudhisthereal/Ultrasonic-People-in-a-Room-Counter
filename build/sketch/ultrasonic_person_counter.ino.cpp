@@ -60,36 +60,36 @@ void displayCount();
 #line 112 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void resetFlags();
 #line 121 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
-void checkPersonIn();
-#line 151 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
-void checkPersonOut();
-#line 182 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+bool checkPersonIn();
+#line 156 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+bool checkPersonOut();
+#line 191 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void displayDebugInfo();
-#line 207 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+#line 216 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void displayFinalInfo();
-#line 223 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+#line 232 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void updateLedState();
-#line 240 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+#line 249 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void attemptFlagReset();
-#line 271 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+#line 280 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void handleResetButton();
-#line 288 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+#line 297 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void updateSensorReadings();
-#line 301 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+#line 310 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void initializeSerial(unsigned long baudRate);
-#line 311 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+#line 320 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void initializePins();
-#line 324 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+#line 333 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void initializeLcd();
-#line 335 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+#line 344 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void greetUser();
-#line 363 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+#line 372 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void savePeopleCount();
-#line 368 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+#line 377 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void loadPeopleCount();
-#line 381 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+#line 390 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void setup();
-#line 392 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
+#line 401 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void loop();
 #line 52 "/home/yudhis/Documents/Kuliah/Embed/proyek/ultrasonic_person_counter/ultrasonic_person_counter.ino"
 void readUltrasonicSensor(int triggerPin, int echoPin, unsigned long &distance)
@@ -161,8 +161,10 @@ void resetFlags()
 /**
  * @brief Check if a person entered the room
  */
-void checkPersonIn()
+bool checkPersonIn()
 {
+  bool personEntered = false;
+
   if (distance2 <= DETECT_DISTANCE && !flag[1])
   {
     flag[1] = true;
@@ -175,6 +177,7 @@ void checkPersonIn()
         peopleCount++;
         displayCount();
         displayCenteredMessage("Person entered!");
+        personEntered = true;
       }
       else
       {
@@ -186,13 +189,16 @@ void checkPersonIn()
       pauseLcd(DELAY_AFTER_COUNT);
     }
   }
+
+  return personEntered;
 }
 
 /**
  * @brief Check if a person exited the room
  */
-void checkPersonOut()
+bool checkPersonOut()
 {
+  bool personExited = false;
 
   if (distance1 <= DETECT_DISTANCE && !flag[0])
   {
@@ -206,6 +212,7 @@ void checkPersonOut()
         peopleCount--;
         displayCount();
         displayCenteredMessage("Person exited!");
+        personExited = true;
       }
       else
       {
@@ -217,6 +224,8 @@ void checkPersonOut()
       pauseLcd(DELAY_AFTER_COUNT);
     }
   }
+
+  return personExited;
 }
 
 /**
@@ -438,8 +447,14 @@ void loop()
   handleResetButton();
 
   updateSensorReadings();
-  checkPersonIn();
-  checkPersonOut();
+
+  // if person entered, don't check for if person exited
+  // this is a specific case where the door only fits one person at a time.
+  if (checkPersonIn())
+  {
+    checkPersonOut();
+  }
+
   attemptFlagReset();
   savePeopleCount();
 

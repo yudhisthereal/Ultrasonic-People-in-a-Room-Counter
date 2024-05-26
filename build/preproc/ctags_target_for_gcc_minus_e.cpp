@@ -93,8 +93,10 @@ void resetFlags()
 /**
  * @brief Check if a person entered the room
  */
-void checkPersonIn()
+bool checkPersonIn()
 {
+  bool personEntered = false;
+
   if (distance2 <= 30 && !flag[1])
   {
     flag[1] = true;
@@ -107,6 +109,7 @@ void checkPersonIn()
         peopleCount++;
         displayCount();
         displayCenteredMessage("Person entered!");
+        personEntered = true;
       }
       else
       {
@@ -118,13 +121,16 @@ void checkPersonIn()
       pauseLcd(1500);
     }
   }
+
+  return personEntered;
 }
 
 /**
  * @brief Check if a person exited the room
  */
-void checkPersonOut()
+bool checkPersonOut()
 {
+  bool personExited = false;
 
   if (distance1 <= 30 && !flag[0])
   {
@@ -138,6 +144,7 @@ void checkPersonOut()
         peopleCount--;
         displayCount();
         displayCenteredMessage("Person exited!");
+        personExited = true;
       }
       else
       {
@@ -149,6 +156,8 @@ void checkPersonOut()
       pauseLcd(1500);
     }
   }
+
+  return personExited;
 }
 
 /**
@@ -370,8 +379,14 @@ void loop()
   handleResetButton();
 
   updateSensorReadings();
-  checkPersonIn();
-  checkPersonOut();
+
+  // if person entered, don't check for if person exited
+  // this is a specific case where the door only fits one person at a time.
+  if (checkPersonIn())
+  {
+    checkPersonOut();
+  }
+
   attemptFlagReset();
   savePeopleCount();
 
